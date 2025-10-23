@@ -68,5 +68,5 @@ jobs:
       #   #[cfg(not(feature = "no-entrypoint"))] pub mod entrypoint;
       - name: Run cargo test (native)
         run: |
-          cargo test --features no-entrypoint --all-targets --verbose
+          cargo test --verbose
 
