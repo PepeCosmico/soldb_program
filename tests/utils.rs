@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
 use borsh::BorshSerialize;
-use solana_program_test::{BanksClient, ProgramTest};
+use solana_program_test::{BanksClient, ProgramTest, processor};
 use solana_sdk::{
     hash::Hash,
     instruction::{AccountMeta, Instruction},
@@ -20,7 +20,11 @@ use soldb_program::{
 
 pub async fn setup() -> Result<(BanksClient, Keypair, Hash), TransportError> {
     let pid = Pubkey::new_from_array(program_id().to_bytes());
-    let program_test = ProgramTest::new("soldb_program", pid, None);
+    let program_test = ProgramTest::new(
+        "soldb_program",
+        pid,
+        processor!(soldb_program::processor::process_instruction),
+    );
 
     Ok(program_test.start().await)
 }

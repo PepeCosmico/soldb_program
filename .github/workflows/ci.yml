@@ -1,0 +1,72 @@
+name: SolDB Program - Native Tests
+
+on:
+  push:
+    branches: [ develop ]
+    paths:
+      - "**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: [ develop ]
+    paths:
+      - "**/*.rs"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-native:
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libssl-dev libudev-dev curl ca-certificates
+
+      # Fija la toolchain estable (ajústala si necesitas una versión concreta)
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-reg-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-reg-
+
+      - name: Cache target/
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-target-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-target-
+
+      - name: Show versions
+        run: |
+          rustc -V
+          cargo -V
+
+      # Ejecuta los tests nativos. 
+      # Requiere que tu crate permita compilar sin entrypoint en tests:
+      #   #[cfg(not(feature = "no-entrypoint"))] pub mod entrypoint;
+      - name: Run cargo test (native)
+        run: |
+          cargo test --features no-entrypoint --all-targets --verbose
+
