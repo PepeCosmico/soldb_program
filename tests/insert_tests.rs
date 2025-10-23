@@ -11,7 +11,7 @@ async fn test_insert() -> Result<(), TransportError> {
     let (banks_client, payer, last_blockhash) = utils::setup().await?;
     let program_id = soldb_program::id();
 
-    let name = "Test".to_string();
+    let name = "TestInsert".to_string();
     let table = SolTable { name };
     let (pda_table_pubkey, _bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;

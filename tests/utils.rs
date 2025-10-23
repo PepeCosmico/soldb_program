@@ -1,17 +1,17 @@
 #![allow(dead_code)]
 
 use borsh::BorshSerialize;
-use solana_program_test::{BanksClient, ProgramTest, processor};
+use solana_program_test::*;
 use solana_sdk::{
     hash::Hash,
     instruction::{AccountMeta, Instruction},
     pubkey::Pubkey,
-    signature::Keypair,
-    signer::Signer,
+    signature::{Keypair, Signer},
     transaction::Transaction,
     transport::TransportError,
 };
 use solana_system_interface::program;
+
 use soldb_program::{
     accounts::{SolTable, SolValue},
     id as program_id,
@@ -20,11 +20,13 @@ use soldb_program::{
 
 pub async fn setup() -> Result<(BanksClient, Keypair, Hash), TransportError> {
     let pid = Pubkey::new_from_array(program_id().to_bytes());
-    let program_test = ProgramTest::new(
+    let mut program_test = ProgramTest::new(
         "soldb_program",
         pid,
         processor!(soldb_program::processor::process_instruction),
     );
+
+    program_test.prefer_bpf(false);
 
     Ok(program_test.start().await)
 }
@@ -111,4 +113,31 @@ pub async fn insert(
     banks_client.process_transaction_with_metadata(txn).await?;
 
     Ok((pda_pubkey, bump))
+}
+
+pub async fn send_ix(
+    banks_client: &mut BanksClient,
+    payer: &Keypair,
+    recent_blockhash: solana_sdk::hash::Hash,
+    ix: Instruction,
+    extra_signers: &[&Keypair],
+) -> Result<(), TransportError> {
+    let mut tx = Transaction::new_with_payer(&[ix], Some(&payer.pubkey()));
+    let mut signers: Vec<&Keypair> = vec![payer];
+    signers.extend_from_slice(extra_signers);
+    tx.sign(&signers, recent_blockhash);
+    banks_client
+        .process_transaction(tx)
+        .await
+        .map_err(to_transport_error)
+}
+
+fn to_transport_error(e: BanksClientError) -> TransportError {
+    match e {
+        BanksClientError::TransactionError(tx_err) => TransportError::TransactionError(tx_err),
+        other => TransportError::IoError(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            format!("BanksClientError: {other:?}"),
+        )),
+    }
 }

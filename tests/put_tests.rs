@@ -21,7 +21,7 @@ use utils::setup;
 async fn test_put() -> Result<(), TransportError> {
     let (banks_client, payer, last_blockhash) = setup().await?;
 
-    let name = "Test".to_string();
+    let name = "TestPut".to_string();
     let table = SolTable { name };
     let (pda_table_pubkey, table_bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;
@@ -41,7 +41,7 @@ async fn test_put() -> Result<(), TransportError> {
 
     let new_payload: Vec<u8> = "v-10".into();
     let instr = SolDbIntructions::Put(Put {
-        table: "Test".to_string(),
+        table: "TestPut".to_string(),
         table_bump,
         key: "k-0".into(),
         key_bump: value_bump,

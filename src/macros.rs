@@ -20,3 +20,40 @@ macro_rules! require_keys_eq {
         }
     };
 }
+
+#[macro_export]
+macro_rules! require_signer {
+    ($a:expr) => {
+        if !$a.is_signer {
+            return Err(ProgramError::MissingRequiredSignature);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! require_is_empty {
+    ($a:expr) => {
+        let is_fresh = $a.lamports() == 0
+            && $a.owner == &solana_system_interface::program::id()
+            && $a.data_len() == 0;
+
+        if !is_fresh {
+            msg!(
+                "PDA already initialized (lamports={}, owner={}, data_len={})",
+                $a.lamports(),
+                $a.owner,
+                $a.data_len()
+            );
+            return Err(ProgramError::AccountAlreadyInitialized);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! require_system_program {
+    ($a:expr) => {
+        if $a.key != &solana_system_interface::program::id() {
+            return Err(ProgramError::IncorrectProgramId);
+        }
+    };
+}

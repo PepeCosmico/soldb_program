@@ -52,6 +52,19 @@ fn process_init_table(
     let pda_info = next_account_info(account_iter)?;
     let sys_prog = next_account_info(account_iter)?;
 
+    require_signer!(owner_info);
+
+    require_system_program!(sys_prog);
+
+    msg!(
+        "INIT CHECK: pda={}, lamports={}, owner={}, data_len={}",
+        pda_info.key,
+        pda_info.lamports(),
+        pda_info.owner,
+        pda_info.data_len()
+    );
+    require_is_empty!(pda_info);
+
     let (expected_pda, expected_bump) = Pubkey::find_program_address(
         &[&init_table.name.as_ref(), owner_info.key.as_ref()],
         program_id,
@@ -61,6 +74,13 @@ fn process_init_table(
         msg!("PDA mismatch");
         return Err(ProgramError::InvalidSeeds);
     }
+
+    msg!(
+        "DEBUG: lamports={}, owner={}, data_len={}",
+        pda_info.lamports(),
+        pda_info.owner,
+        pda_info.data_len()
+    );
 
     let sol_table = SolTable {
         name: init_table.name.clone(),

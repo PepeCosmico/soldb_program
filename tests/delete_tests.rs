@@ -20,7 +20,7 @@ mod utils;
 async fn test_delete() -> Result<(), TransportError> {
     let (banks_client, payer, last_blockhash) = setup().await?;
 
-    let name = "Test".to_string();
+    let name = "TestDelete".to_string();
     let table = SolTable { name: name.clone() };
     let (pda_table_pubkey, table_bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;
