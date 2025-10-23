@@ -61,22 +61,17 @@ soldb_program/
 
 ## 🚀 Build & Test
 
-1. **Install Solana CLI**  
-   ```bash
-   sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
-   ```
-
-2. **Build the on-chain program (SBF)**  
+1. **Build the on-chain program (SBF)**  
    ```bash
    cargo build-sbf --manifest-path=./programs/soldb_program/Cargo.toml
    ```
 
-3. **Run integration tests**  
+2. **Run integration tests**  
    ```bash
    cargo test-sbf
    ```
 
-4. **Optional: native unit tests**
+3. **Optional: native unit tests**
    ```bash
    cargo test
    ```
@@ -133,10 +128,3 @@ See the [`LICENSE`](./LICENSE) file for details.
 **Pedro Llinás Ferrer**  
 Developer of SolDB – Universidad Politécnica de Madrid (ETSISI)
 
----
-
-## 🌐 Future improvements
-
-- Add **Get/Scan** operations for direct reads  
-- Dynamic PDA resizing support  
-- Integration with off-chain clients in Rust or TypeScript
