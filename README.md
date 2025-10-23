@@ -1,27 +1,27 @@
 # 🧱 SolDB Program
 
-**SolDB** es un programa on-chain escrito en **Rust** para la blockchain de **Solana**.  
-Su objetivo es proporcionar una base de datos simple basada en tablas y pares clave-valor, completamente gestionada dentro de cuentas PDA del propio programa.
+**SolDB** is an on-chain program written in **Rust** for the **Solana** blockchain.  
+Its goal is to provide a simple, table-based key-value database fully managed within PDA accounts controlled by the program itself.
 
 ---
 
-## 📘 Descripción general
+## 📘 Overview
 
-El programa implementa una arquitectura de almacenamiento jerárquica donde:
+The program implements a hierarchical storage model where:
 
-- Cada **tabla** es una cuenta PDA derivada del nombre de la tabla y la clave pública del creador.
-- Cada **valor** se almacena en una cuenta PDA derivada de la tabla y la clave del registro.
-- Los datos se serializan utilizando **Borsh** para optimizar espacio y compatibilidad.
+- Each **table** is a PDA account derived from the table name and the creator’s public key.
+- Each **value** is a PDA account derived from the table and the record key.
+- Data is serialized using **Borsh** for compact and deterministic encoding.
 
-El programa incluye operaciones básicas:
-- **InitTable** → Crea una nueva tabla.
-- **Put** → Inserta o actualiza un par clave-valor dentro de una tabla existente.
-- **Delete** → Elimina un registro específico de una tabla.
-- (Opcionalmente: futuras operaciones de lectura o limpieza masiva).
+Main instructions implemented:
+- **InitTable** → Creates a new table.
+- **Put** → Inserts or updates a key-value pair under an existing table.
+- **Delete** → Deletes a specific record from a table.
+- (Future extensions may include read or cleanup operations).
 
 ---
 
-## ⚙️ Estructura del proyecto
+## ⚙️ Project structure
 
 ```
 soldb_program/
@@ -41,44 +41,49 @@ soldb_program/
     └── utils.rs
 ```
 
-- **instructions.rs** → Define las instrucciones (`InitTable`, `Put`, `Delete`).
-- **processor.rs** → Implementa la lógica principal de cada instrucción.
-- **accounts.rs** → Define las estructuras `SolTable` y `SolValue`.
-- **error.rs** → Enumera errores personalizados (`SolDbError`).
-- **tests/** → Pruebas de integración con `solana-program-test`.
+- **instructions.rs** → Defines the available instructions (`InitTable`, `Put`, `Delete`).
+- **processor.rs** → Contains the core logic for each instruction.
+- **accounts.rs** → Defines the data structures `SolTable` and `SolValue`.
+- **error.rs** → Custom error definitions (`SolDbError`).
+- **tests/** → Integration tests using `solana-program-test`.
 
 ---
 
-## 🧰 Tecnologías utilizadas
+## 🧰 Technologies
 
-- **Rust** (con nightly features para Solana)
+- **Rust** (nightly, Solana-compatible)
 - **Solana SDK** `v2.x`
-- **Borsh** para serialización binaria
-- **Program Test Framework** para tests locales
-- **Cargo Make** / **Makefile** para simplificar builds
+- **Borsh** for binary serialization
+- **Program Test Framework** for local testing
+- **Cargo Make** / **Makefile** for build automation
 
 ---
 
-## 🚀 Compilación e instalación
+## 🚀 Build & Test
 
-1. **Construir el programa (BPF/SBF)**  
+1. **Install Solana CLI**  
    ```bash
-   cargo build-sbf
+   sh -c "$(curl -sSfL https://release.solana.com/v1.18.0/install)"
    ```
 
-2. **Ejecutar tests**  
+2. **Build the on-chain program (SBF)**  
+   ```bash
+   cargo build-sbf --manifest-path=./programs/soldb_program/Cargo.toml
+   ```
+
+3. **Run integration tests**  
    ```bash
    cargo test-sbf
    ```
 
-3. **Opcional: ejecutar pruebas unitarias nativas**
+4. **Optional: native unit tests**
    ```bash
    cargo test
    ```
 
 ---
 
-## 🧪 Ejemplo de instrucción
+## 🧪 Example instruction
 
 ```rust
 let instr = SolDbIntructions::InitTable(InitTable {
@@ -87,12 +92,12 @@ let instr = SolDbIntructions::InitTable(InitTable {
 });
 ```
 
-Cada instrucción se serializa con `borsh` y se envía como parte de una `Transaction` de Solana.  
-Las cuentas PDA se derivan de los seeds `["table_name", owner_pubkey]`.
+Each instruction is serialized with `borsh` and sent as part of a Solana `Transaction`.  
+PDAs are derived using seeds like `["table_name", owner_pubkey]`.
 
 ---
 
-## 🧩 Diseño del almacenamiento
+## 🧩 Storage layout
 
 ```text
 ┌────────────────────────┐
@@ -110,28 +115,28 @@ Las cuentas PDA se derivan de los seeds `["table_name", owner_pubkey]`.
       └─────────────┘
 ```
 
-Cada PDA contiene datos serializados en formato Borsh:  
+Each PDA stores Borsh-serialized data:  
 - `SolTable { name: String }`  
 - `SolValue { val: Vec<u8> }`
 
 ---
 
-## 📄 Licencia
+## 📄 License
 
-Este proyecto se distribuye bajo la licencia **MIT**.  
-Consulta el archivo [`LICENSE`](./LICENSE) para más detalles.
+This project is licensed under the **MIT License**.  
+See the [`LICENSE`](./LICENSE) file for details.
 
 ---
 
-## ✍️ Autor
+## ✍️ Author
 
 **Pedro Llinás Ferrer**  
-Desarrollador de SolDB – Universidad Politécnica de Madrid (ETSISI)
+Developer of SolDB – Universidad Politécnica de Madrid (ETSISI)
 
 ---
 
-## 🌐 Próximos pasos
+## 🌐 Future improvements
 
-- Añadir operaciones de **Get/Scan** para lectura directa.  
-- Soporte para **resizing dinámico** de cuentas PDA.  
-- Integración con cliente off-chain en Rust o TypeScript.
+- Add **Get/Scan** operations for direct reads  
+- Dynamic PDA resizing support  
+- Integration with off-chain clients in Rust or TypeScript
