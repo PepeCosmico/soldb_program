@@ -29,6 +29,15 @@ macro_rules! require_signer {
         }
     };
 }
+#[macro_export]
+macro_rules! require_writer {
+    ($a:expr) => {
+        if !$a.is_writable {
+            let err = SolDbError::NotWritable;
+            return Err(err.into());
+        }
+    };
+}
 
 #[macro_export]
 macro_rules! require_is_empty {

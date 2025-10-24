@@ -16,8 +16,10 @@ use crate::{
     accounts::{SolTable, SolValue},
     error::SolDbError,
     instructions::{Delete, InitTable, Insert, Put, SolDbIntructions},
-    utils::create_account_with_data,
+    processor::init_table::create_table_account,
 };
+
+mod init_table;
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -54,11 +56,15 @@ fn process_init_table(
     let pda_info = next_account_info(account_iter)?;
     let sys_prog = next_account_info(account_iter)?;
 
+    // Owner
     require_signer!(owner_info);
 
-    require_system_program!(sys_prog);
-
+    // PDA
+    require_writer!(pda_info);
     require_is_empty!(pda_info);
+
+    // System Program
+    require_system_program!(sys_prog);
 
     let (expected_pda, expected_bump) = Pubkey::find_program_address(
         &[&init_table.name.as_ref(), owner_info.key.as_ref()],
@@ -70,23 +76,7 @@ fn process_init_table(
         return Err(ProgramError::InvalidSeeds);
     }
 
-    let sol_table = SolTable::new(init_table.name.clone());
-
-    let seeds = &[
-        init_table.name.as_ref(),
-        owner_info.key.as_ref(),
-        &[init_table.bump],
-    ];
-    let signer_seeds = &[&seeds[..]];
-
-    create_account_with_data(
-        owner_info,
-        pda_info,
-        sol_table,
-        accounts,
-        signer_seeds,
-        program_id,
-    )?;
+    create_table_account(init_table, owner_info, pda_info, accounts, program_id)?;
 
     Ok(())
 }

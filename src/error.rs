@@ -9,6 +9,7 @@ pub enum SolDbError {
     NotTable = 2,
     GrowthTooLarge = 3,
     WrongError = 4,
+    NotWritable = 5,
 }
 
 impl From<SolDbError> for ProgramError {
@@ -43,6 +44,7 @@ impl ToStr for SolDbError {
                 "Error: The growth of the account has exceeded the maximum of 10KB"
             }
             Self::WrongError => "Error: Wrong error value",
+            Self::NotWritable => "Error: Account is not writable",
         }
     }
 }
