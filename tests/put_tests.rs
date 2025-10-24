@@ -22,7 +22,7 @@ async fn test_put() -> Result<(), TransportError> {
     let (banks_client, payer, last_blockhash) = setup().await?;
 
     let name = "TestPut".to_string();
-    let table = SolTable { name };
+    let table = SolTable::new(name);
     let (pda_table_pubkey, table_bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;
 

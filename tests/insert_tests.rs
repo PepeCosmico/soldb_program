@@ -12,7 +12,7 @@ async fn test_insert() -> Result<(), TransportError> {
     let program_id = soldb_program::id();
 
     let name = "TestInsert".to_string();
-    let table = SolTable { name };
+    let table = SolTable::new(name);
     let (pda_table_pubkey, _bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;
 

@@ -6,6 +6,7 @@ pub mod instructions;
 #[macro_use]
 pub mod macros;
 pub mod processor;
+pub mod utils;
 
 #[cfg(not(feature = "no-entrypoint"))]
 pub mod entrypoint;

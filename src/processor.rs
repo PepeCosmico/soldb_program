@@ -16,7 +16,9 @@ use crate::{
     accounts::{SolTable, SolValue},
     error::SolDbError,
     instructions::{Delete, InitTable, Insert, Put, SolDbIntructions},
+    utils::create_account_with_data,
 };
+
 pub fn process_instruction(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -56,13 +58,6 @@ fn process_init_table(
 
     require_system_program!(sys_prog);
 
-    msg!(
-        "INIT CHECK: pda={}, lamports={}, owner={}, data_len={}",
-        pda_info.key,
-        pda_info.lamports(),
-        pda_info.owner,
-        pda_info.data_len()
-    );
     require_is_empty!(pda_info);
 
     let (expected_pda, expected_bump) = Pubkey::find_program_address(
@@ -75,21 +70,7 @@ fn process_init_table(
         return Err(ProgramError::InvalidSeeds);
     }
 
-    msg!(
-        "DEBUG: lamports={}, owner={}, data_len={}",
-        pda_info.lamports(),
-        pda_info.owner,
-        pda_info.data_len()
-    );
-
-    let sol_table = SolTable {
-        name: init_table.name.clone(),
-    };
-    let mut serialized = Vec::new();
-    sol_table.serialize(&mut serialized)?;
-    let space = serialized.len() as u64;
-    let rent = Rent::get()?;
-    let lamports = rent.minimum_balance(space as usize);
+    let sol_table = SolTable::new(init_table.name.clone());
 
     let seeds = &[
         init_table.name.as_ref(),
@@ -98,18 +79,14 @@ fn process_init_table(
     ];
     let signer_seeds = &[&seeds[..]];
 
-    let ix = instruction::create_account(owner_info.key, pda_info.key, lamports, space, program_id);
-    invoke_signed(
-        &ix,
-        &[owner_info.clone(), pda_info.clone(), sys_prog.clone()],
+    create_account_with_data(
+        owner_info,
+        pda_info,
+        sol_table,
+        accounts,
         signer_seeds,
+        program_id,
     )?;
-
-    let sol_table = SolTable {
-        name: init_table.name,
-    };
-
-    sol_table.serialize(&mut &mut pda_info.data.borrow_mut()[..])?;
 
     Ok(())
 }

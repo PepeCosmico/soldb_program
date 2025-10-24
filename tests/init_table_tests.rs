@@ -25,7 +25,10 @@ async fn test_init_table_ok() -> Result<(), TransportError> {
     let program_id = soldb_program::id();
 
     let name = "TestInit".to_string();
-    let table = SolTable { name: name.clone() };
+    let table = SolTable {
+        name: name.clone(),
+        keys: Vec::new(),
+    };
     let (pda_pubkey, _bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;
 
