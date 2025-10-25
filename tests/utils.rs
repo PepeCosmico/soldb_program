@@ -52,7 +52,7 @@ pub async fn init_table(
     instr.serialize(&mut ix_data).unwrap();
 
     let accounts = vec![
-        AccountMeta::new(payer.pubkey(), true),
+        AccountMeta::new_readonly(payer.pubkey(), true),
         AccountMeta::new(pda_pubkey, false),
         AccountMeta::new_readonly(program::ID, false),
     ];

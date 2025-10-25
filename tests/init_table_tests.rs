@@ -94,8 +94,8 @@ async fn test_init_table_pda_mismatch_name() -> Result<(), TransportError> {
     let ix = Instruction {
         program_id,
         accounts: vec![
-            AccountMeta::new(payer.pubkey(), true), // owner (signer)
-            AccountMeta::new(pda_pubkey, false),    // pda (writable)
+            AccountMeta::new_readonly(payer.pubkey(), true), // owner (signer)
+            AccountMeta::new(pda_pubkey, false),             // pda (writable)
             AccountMeta::new_readonly(program::ID, false),
         ],
         data,
@@ -143,7 +143,7 @@ async fn test_init_table_wrong_bump() -> Result<(), TransportError> {
     let ix = Instruction {
         program_id,
         accounts: vec![
-            AccountMeta::new(payer.pubkey(), true),
+            AccountMeta::new_readonly(payer.pubkey(), true),
             AccountMeta::new(pda_pubkey, false),
             AccountMeta::new_readonly(program::ID, false),
         ],
@@ -191,7 +191,7 @@ async fn test_init_table_owner_not_signer() -> Result<(), TransportError> {
     let ix = Instruction {
         program_id,
         accounts: vec![
-            AccountMeta::new(owner.pubkey(), false), // ❌ no signer
+            AccountMeta::new_readonly(owner.pubkey(), false), // ❌ no signer
             AccountMeta::new(pda_pubkey, false),
             AccountMeta::new_readonly(program::ID, false),
         ],
@@ -226,7 +226,7 @@ async fn test_init_table_wrong_system_program() -> Result<(), TransportError> {
     let (pda_pubkey, bump) =
         Pubkey::find_program_address(&[name.as_bytes(), payer.pubkey().as_ref()], &program_id);
 
-    let fake_sys = Keypair::new(); // ❌ en lugar de system_program::ID
+    let fake_sys = Keypair::new();
 
     let init = InitTable {
         name: name.clone(),
@@ -240,9 +240,9 @@ async fn test_init_table_wrong_system_program() -> Result<(), TransportError> {
     let ix = Instruction {
         program_id,
         accounts: vec![
-            AccountMeta::new(payer.pubkey(), true),
+            AccountMeta::new_readonly(payer.pubkey(), true),
             AccountMeta::new(pda_pubkey, false),
-            AccountMeta::new_readonly(fake_sys.pubkey(), false), // ❌
+            AccountMeta::new_readonly(fake_sys.pubkey(), false),
         ],
         data,
     };
@@ -263,6 +263,53 @@ async fn test_init_table_wrong_system_program() -> Result<(), TransportError> {
         }
         _ => panic!("Expected InstructionError::IncorrectProgramId, got {tx_err:?}"),
     }
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_init_table_pda_not_writer() -> Result<(), TransportError> {
+    let (mut banks_client, payer, recent_blockhash) = utils::setup().await?;
+    let program_id = soldb_program::id();
+
+    let owner = Keypair::new();
+    let name = "TestInitPdaNotWritable".to_string();
+    let (pda_pubkey, bump) =
+        Pubkey::find_program_address(&[name.as_bytes(), owner.pubkey().as_ref()], &program_id);
+
+    let init = InitTable {
+        name: name.clone(),
+        bump,
+    };
+    let mut data = Vec::new();
+    SolDbIntructions::InitTable(init)
+        .serialize(&mut data)
+        .unwrap();
+
+    let ix = Instruction {
+        program_id,
+        accounts: vec![
+            AccountMeta::new_readonly(payer.pubkey(), true),
+            AccountMeta::new_readonly(pda_pubkey, false),
+            AccountMeta::new_readonly(program::ID, false),
+        ],
+        data,
+    };
+
+    let err = send_ix(&mut banks_client, &payer, recent_blockhash, ix, &[])
+        .await
+        .unwrap_err();
+
+    let TransportError::TransactionError(tx_err) = err else {
+        panic!("Unexpected error type");
+    };
+    assert_eq!(
+        tx_err,
+        solana_sdk::transaction::TransactionError::InstructionError(
+            0,
+            solana_sdk::instruction::InstructionError::Custom(5)
+        )
+    );
 
     Ok(())
 }

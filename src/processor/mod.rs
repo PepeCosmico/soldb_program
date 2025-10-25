@@ -63,9 +63,6 @@ fn process_init_table(
     require_writer!(pda_info);
     require_is_empty!(pda_info);
 
-    // System Program
-    require_system_program!(sys_prog);
-
     let (expected_pda, expected_bump) = Pubkey::find_program_address(
         &[&init_table.name.as_ref(), owner_info.key.as_ref()],
         program_id,
@@ -75,6 +72,9 @@ fn process_init_table(
         msg!("PDA mismatch");
         return Err(ProgramError::InvalidSeeds);
     }
+
+    // System Program
+    require_system_program!(sys_prog);
 
     create_table_account(init_table, owner_info, pda_info, accounts, program_id)?;
 
