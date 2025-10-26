@@ -2,7 +2,7 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 
 use crate::{accounts::SolTable, instructions::InitTable, utils::create_account_with_data};
 
-pub fn create_table_account(
+pub fn process_init_table(
     init_table: InitTable,
     owner_info: &AccountInfo,
     pda_info: &AccountInfo,

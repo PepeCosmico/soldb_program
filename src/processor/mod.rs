@@ -3,7 +3,7 @@ use solana_program::{
     account_info::{AccountInfo, next_account_info},
     entrypoint::ProgramResult,
     msg,
-    program::{invoke, invoke_signed},
+    program::invoke,
     program_error::ProgramError,
     pubkey::Pubkey,
     rent::Rent,
@@ -16,10 +16,10 @@ use crate::{
     accounts::{SolTable, SolValue},
     error::SolDbError,
     instructions::{Delete, InitTable, Insert, Put, SolDbIntructions},
-    processor::init_table::create_table_account,
 };
 
 mod init_table;
+mod insert;
 
 pub fn process_instruction(
     program_id: &Pubkey,
@@ -76,17 +76,27 @@ fn process_init_table(
     // System Program
     require_system_program!(sys_prog);
 
-    create_table_account(init_table, owner_info, pda_info, accounts, program_id)?;
+    init_table::process_init_table(init_table, owner_info, pda_info, accounts, program_id)?;
 
     Ok(())
 }
 
 fn process_insert(insert: Insert, program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
     let account_iter = &mut accounts.iter();
+    let owner_info = next_account_info(account_iter)?;
     let table_info = next_account_info(account_iter)?;
     let pda_info = next_account_info(account_iter)?;
-    let owner_info = next_account_info(account_iter)?;
     let sys_prog = next_account_info(account_iter)?;
+
+    // Owner
+    require_signer!(owner_info);
+
+    // PDA Table
+    require_writer!(table_info);
+
+    // PDA
+    require_writer!(pda_info);
+    require_is_empty!(pda_info);
 
     let (expected_pda, expected_bump) = Pubkey::find_program_address(
         &[
@@ -97,41 +107,17 @@ fn process_insert(insert: Insert, program_id: &Pubkey, accounts: &[AccountInfo])
         program_id,
     );
 
-    let _ = SolTable::try_from_slice(&table_info.data.borrow()).map_err(|_| {
-        msg!("Second Account is not a SolTable Account");
-        ProgramError::InvalidAccountData
-    })?;
-
     if pda_info.key != &expected_pda || insert.bump != expected_bump {
-        msg!("PDA mismatch");
+        msg!("PDA Value mismatch");
         return Err(ProgramError::InvalidSeeds);
     }
 
-    let sol_value = SolValue {
-        val: insert.payload.clone(),
-    };
-    let mut serialized = Vec::new();
-    sol_value.serialize(&mut serialized)?;
-    let space = serialized.len() as u64;
-    let rent = Rent::get()?;
-    let lamports = rent.minimum_balance(space as usize);
+    // System Program
+    require_system_program!(sys_prog);
 
-    let seeds = &[
-        &insert.key,
-        table_info.key.as_ref(),
-        owner_info.key.as_ref(),
-        &[insert.bump],
-    ];
-    let signer_seeds = &[&seeds[..]];
-
-    let ix = instruction::create_account(owner_info.key, pda_info.key, lamports, space, program_id);
-    invoke_signed(
-        &ix,
-        &[owner_info.clone(), pda_info.clone(), sys_prog.clone()],
-        signer_seeds,
+    insert::process_insert(
+        insert, owner_info, table_info, pda_info, accounts, program_id,
     )?;
-
-    sol_value.serialize(&mut &mut pda_info.data.borrow_mut()[..])?;
 
     Ok(())
 }

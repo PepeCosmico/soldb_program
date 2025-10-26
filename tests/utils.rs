@@ -95,9 +95,9 @@ pub async fn insert(
     instr.serialize(&mut ix_data).unwrap();
 
     let accounts = vec![
-        AccountMeta::new_readonly(table.clone(), false),
+        AccountMeta::new_readonly(payer.pubkey(), true),
+        AccountMeta::new(table.clone(), false),
         AccountMeta::new(pda_pubkey, false),
-        AccountMeta::new(payer.pubkey(), true),
         AccountMeta::new_readonly(program::id(), false),
     ];
 

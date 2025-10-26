@@ -18,9 +18,9 @@ pub enum SolDbIntructions {
     /// the table name and key bytes.
     ///
     /// Expects the following accounts:
-    /// 1. `[]` Table account (must match PDA derived from table name and owner).
-    /// 2. `[writable]` Key-value PDA to be created.
-    /// 3. `[signer]` Payer for account creation.
+    /// 1. `[signer]` Payer for account creation.
+    /// 2. `[writable]` Table account (must match PDA derived from table name and owner).
+    /// 3. `[writable]` Key-value PDA to be created.
     /// 4. `[]` System program.
     Insert(Insert),
 
