@@ -76,13 +76,13 @@ pub async fn insert(
     payer: &Keypair,
     last_blockhash: Hash,
     table: &Pubkey,
-    key: Vec<u8>,
+    key: String,
     sol_value: &SolValue,
 ) -> Result<(Pubkey, u8), TransportError> {
     let program_id = soldb_program::id();
 
     let (pda_pubkey, bump) = Pubkey::find_program_address(
-        &[&key, &table.to_bytes(), payer.pubkey().as_ref()],
+        &[key.as_ref(), &table.to_bytes(), payer.pubkey().as_ref()],
         &program_id,
     );
 

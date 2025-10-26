@@ -78,7 +78,7 @@ pub struct InitTable {
 
 #[derive(BorshDeserialize, BorshSerialize, Debug)]
 pub struct Insert {
-    pub key: Vec<u8>,
+    pub key: String,
     pub payload: Vec<u8>,
     pub bump: u8,
 }
@@ -87,7 +87,7 @@ pub struct Insert {
 pub struct Put {
     pub table: String,
     pub table_bump: u8,
-    pub key: Vec<u8>,
+    pub key: String,
     pub key_bump: u8,
     pub payload: Vec<u8>,
 }
@@ -96,6 +96,6 @@ pub struct Put {
 pub struct Delete {
     pub table: String,
     pub table_bump: u8,
-    pub key: Vec<u8>,
+    pub key: String,
     pub key_bump: u8,
 }

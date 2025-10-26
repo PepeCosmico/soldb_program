@@ -26,7 +26,7 @@ async fn test_put() -> Result<(), TransportError> {
     let (pda_table_pubkey, table_bump) =
         utils::init_table(&banks_client, &payer, last_blockhash, &table).await?;
 
-    let key: Vec<u8> = "k-0".into();
+    let key: String = "k-0".into();
     let value: Vec<u8> = "v-0".into();
     let sol_value = SolValue { val: value.clone() };
     let (pda_val_pubkey, value_bump) = utils::insert(
@@ -34,7 +34,7 @@ async fn test_put() -> Result<(), TransportError> {
         &payer,
         last_blockhash,
         &pda_table_pubkey,
-        key.into(),
+        key,
         &sol_value,
     )
     .await?;

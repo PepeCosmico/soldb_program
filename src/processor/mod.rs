@@ -76,7 +76,7 @@ fn process_init_table(
     // System Program
     require_system_program!(sys_prog);
 
-    init_table::process_init_table(init_table, owner_info, pda_info, accounts, program_id)?;
+    init_table::process_init_table(init_table, accounts, program_id)?;
 
     Ok(())
 }
@@ -100,7 +100,7 @@ fn process_insert(insert: Insert, program_id: &Pubkey, accounts: &[AccountInfo])
 
     let (expected_pda, expected_bump) = Pubkey::find_program_address(
         &[
-            &insert.key,
+            &insert.key.as_ref(),
             table_info.key.as_ref(),
             owner_info.key.as_ref(),
         ],
@@ -115,9 +115,7 @@ fn process_insert(insert: Insert, program_id: &Pubkey, accounts: &[AccountInfo])
     // System Program
     require_system_program!(sys_prog);
 
-    insert::process_insert(
-        insert, owner_info, table_info, pda_info, accounts, program_id,
-    )?;
+    insert::process_insert(insert, accounts, program_id)?;
 
     Ok(())
 }
@@ -147,7 +145,7 @@ fn process_put(put: Put, program_id: &Pubkey, accounts: &[AccountInfo]) -> Progr
 
     let (expected_val_pda, expected_val_bump) = Pubkey::find_program_address(
         &[
-            &put.key,
+            &put.key.as_ref(),
             &table_info.key.to_bytes(),
             owner_info.key.as_ref(),
         ],
@@ -234,7 +232,7 @@ fn process_delete(delete: Delete, program_id: &Pubkey, accounts: &[AccountInfo])
 
     let (expected_val_pda, expected_val_bump) = Pubkey::find_program_address(
         &[
-            &delete.key,
+            &delete.key.as_ref(),
             &table_info.key.to_bytes(),
             owner_info.key.as_ref(),
         ],
